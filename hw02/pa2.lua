@@ -9,6 +9,9 @@
 local pa2 = {}
 
 function pa2.mapTable(f, t)
+  for k, v in pairs(t) 
+    do t[k] = f(v) 
+  end
   return t
 end
 
