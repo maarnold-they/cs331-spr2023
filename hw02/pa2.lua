@@ -8,15 +8,19 @@
 
 local pa2 = {}
 
-function pa2.mapTable(f, t)
-  for k, v in pairs(t) 
-    do t[k] = f(v) 
+function pa2.mapTable(inputFunction, inputTable)
+  for key, value in pairs(inputTable) do
+    inputTable[key] = inputFunction(value) 
   end
-  return t
+  return inputTable
 end
 
-function pa2.concatMax(s, i)
-  return s
+function pa2.concatMax(inputString, maxLength)
+  modifiedString = ""
+  while maxLength >= (string.len(modifiedString) + string.len(inputString)) do
+    modifiedString = modifiedString .. inputString
+  end
+  return modifiedString
 end
 
 function pa2.collatz(k)
