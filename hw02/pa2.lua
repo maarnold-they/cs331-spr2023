@@ -39,7 +39,14 @@ function pa2.collatz(k)
   end
 end
 
-function pa2.backSubs(s)
+function pa2.backSubs(inputString)
+  coroutine.yield("")
+  inputString = string.reverse(inputString)
+  for currentLength = 0, string.len(inputString), 1 do
+    for startPosition = 1, string.len(inputString) - currentLength, 1 do
+      coroutine.yield(string.sub(inputString, startPosition, startPosition + currentLength))
+    end
+  end
   return s
 end
 
