@@ -370,7 +370,7 @@ end
 -- Parsing function for nonterminal "write_arg".
 -- Function init must be called before this function is called.
 function parse_write_arg()
-    local savelex
+    local savelex, ast, good
 
     savelex = lexstr
     if matchCat(lexit.STRLIT) then
@@ -378,10 +378,16 @@ function parse_write_arg()
 
     elseif matchString("cr") then
         return true, { CR_OUT }
-
+    elseif matchString("char") then
+      if not matchString("(") then return false, nil end
+      good, ast = parse_expr()
+      if not good then return false, nil end
+      if not matchString(")") then return false, nil end
+      return true, {CHAR_CALL, ast}
     else
-        -- TODO: WRITE THIS!!!
-        return false, nil  -- DUMMY
+      good, ast = parse_expr()
+      if not good then return false, nil end
+      return true, ast
     end
 end
 
