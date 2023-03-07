@@ -135,33 +135,6 @@ end
 -- Main program
 -- Check several "programs".
 io.write("Recursive-Descent Parser: Maleo\n")
-check("")
-check("write()")
-check("write(cr)")
-check("write(\"abc\",\"def\",cr)write('xyz')write(cr)")
-check("function f()end")
-check("function g()function h()end write(cr)write(cr)end write('y',cr)")
-io.write("### All of the programs above will parse correcly with\n")
-io.write("### parseit.lua as posted in the Git repository.\n")
-io.write("### Those below may not (yet).\n")
-check("a=3")
-check("a=a+1")
-check("a=read()")
-check("write(a+1)")
-check("a=3 write(a+b, cr)")
-check("a[e*2+1]=2")
-check("-- Maleo Example #1\n-- Glenn G. Chappell\n"..
-      "-- 2023-02-14\nx = 3  -- Set a variable\nwrite(x+4, cr)\n")
-io.write("### Above should be the AST given in the Assignment 4 "..
-         "description,\n")
-io.write("### under 'Introduction'\n")
-check("write() elseif")
-io.write("### Above should be ")
-io.write("\"Bad - extra characters at end\"\n")
-check("function foo() write(cr")
-io.write("### Above should be ")
-io.write("\"Unfinished - more is needed\"\n")
-check("if a b")
-io.write("### Above should be ")
-io.write("\"Bad - syntax error\"\n")
+check("while true do end")
+
 

@@ -296,10 +296,25 @@ function parse_statement()
         end
 
         return true, { FUNC_DEF, savelex, ast1 }
-
+    elseif matchString("while") then
+      good, ast1 = parse_expr()
+      if not good then return false, nil end
+      if not matchString("do") then return false, nil end
+      good, ast2 = parse_stmt_list()
+      if not good then return false, nil end
+      if not matchString("end") then return false, nil end
+      return true, {WHILE_LOOP, ast1, ast2}
     else
-        -- TODO: WRITE THIS!!!
-        return false, nil  -- DUMMY
+        savelex = lexstr
+        if not matchCat(lexit.ID) then return false, nil end
+        if matchString("(") then
+          if matchString (")") then
+            return true, { FUNC_CALL, savelex }
+          else
+            return false, nil
+          end
+        end
+        return false, nil
     end
 end
 
@@ -328,8 +343,18 @@ end
 -- Parsing function for nonterminal "expr".
 -- Function init must be called before this function is called.
 function parse_expr()
-    -- TODO: WRITE THIS!!!
-    return false, nil  -- DUMMY
+  local good, ast, saveop, newast
+  good, ast = parse_compare_expr()
+  if not good then return false, nil end
+  while true do 
+    saveop = lexstr
+    if not (matchString('and') 
+      or matchString('or')) then break end
+    good, newast = parse_compare_expr()
+    if not good then return false, nil end
+    ast = { { BIN_OP, saveop}, ast, newast }
+  end
+  return true, ast
 end
 
 
@@ -337,8 +362,22 @@ end
 -- Parsing function for nonterminal "compare_expr".
 -- Function init must be called before this function is called.
 function parse_compare_expr()
-    -- TODO: WRITE THIS!!!
-    return false, nil  -- DUMMY
+  local good, ast, saveop, newast
+  good, ast = parse_arith_expr()
+  if not good then return false, nil end
+  while true do 
+    saveop = lexstr
+    if not (matchString('==') 
+      or matchString('!=')
+      or matchString('<')
+      or matchString('<=')
+      or matchString('>')
+      or matchString('>=')) then break end
+    good, newast = parse_arith_expr()
+    if not good then return false, nil end
+    ast = { { BIN_OP, saveop}, ast, newast }
+  end
+  return true, ast
 end
 
 
@@ -346,8 +385,17 @@ end
 -- Parsing function for nonterminal "arith_expr".
 -- Function init must be called before this function is called.
 function parse_arith_expr()
-    -- TODO: WRITE THIS!!!
-    return false, nil  -- DUMMY
+  local good, ast, saveop, newast
+  good, ast = parse_term()
+  if not good then return false, nil end
+  while true do 
+    saveop = lexstr
+    if not (matchString('+') or matchString('-')) then break end
+    good, newast = parse_term()
+    if not good then return false, nil end
+    ast = { { BIN_OP, saveop}, ast, newast }
+  end
+  return true, ast
 end
 
 
@@ -355,8 +403,21 @@ end
 -- Parsing function for nonterminal "term".
 -- Function init must be called before this function is called.
 function parse_term()
-    -- TODO: WRITE THIS!!!
-    return false, nil  -- DUMMY
+  local good, ast, saveop, newast
+  good, ast = parse_factor()
+  if not good then return false, nil end
+
+  while true do
+    saveop = lexstr
+    if not (matchString('*') 
+      or matchString('/')
+      or matchString('%')) then break end
+    good, newast = parse_factor()
+    if not good then return false, nil end
+    ast = { { BIN_OP, saveop }, ast, newast }
+  end
+
+    return true, ast
 end
 
 
@@ -364,8 +425,36 @@ end
 -- Parsing function for nonterminal "factor".
 -- Function init must be called before this function is called.
 function parse_factor()
-    -- TODO: WRITE THIS!!!
-    return false, nil  -- DUMMY
+  local savelex, good, ast
+
+  savelex = lexstr
+  if matchCat(lexit.ID) then
+    if matchString("(") then
+      if matchString (")") then
+        return true, { FUNC_CALL, savelex }
+      else
+        return false, nil
+      end
+    end
+    return true, { SIMPLE_VAR, savelex }
+  elseif matchCat(lexit.NUMLIT) then
+    return true, { NUMLIT_VAL, savelex }
+  elseif matchString("(") then
+    good, ast = parse_expr()
+    if not good then
+      return false, nil
+    end
+
+    if not matchString(")") then
+      return false, nil
+    end
+
+    return true, ast
+  elseif matchString("true") or matchString("false") then 
+    return true, {BOOLLIT_VAL, savelex}
+  else
+    return false, nil
+  end
 end
 
 
