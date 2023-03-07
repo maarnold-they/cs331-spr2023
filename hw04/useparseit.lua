@@ -135,6 +135,8 @@ end
 -- Main program
 -- Check several "programs".
 io.write("Recursive-Descent Parser: Maleo\n")
-check("while true do end")
+check("x=a")
+check("x=a[1]")
+check("x[0]=a")
 
 

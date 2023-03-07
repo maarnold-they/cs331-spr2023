@@ -240,8 +240,8 @@ end
 -- Parsing function for nonterminal "statement".
 -- Function init must be called before this function is called.
 function parse_statement()
-    local good, ast1, ast2, savelex
-
+    local good, ast1, ast2, savelex, saveast
+    savelex = lexstr
     if matchString("write") then
         if not matchString("(") then
             return false, nil
@@ -296,6 +296,7 @@ function parse_statement()
         end
 
         return true, { FUNC_DEF, savelex, ast1 }
+    
     elseif matchString("while") then
       good, ast1 = parse_expr()
       if not good then return false, nil end
@@ -304,17 +305,59 @@ function parse_statement()
       if not good then return false, nil end
       if not matchString("end") then return false, nil end
       return true, {WHILE_LOOP, ast1, ast2}
-    else
-        savelex = lexstr
-        if not matchCat(lexit.ID) then return false, nil end
+    
+    elseif matchString("if") then
+      good, ast1 = parse_compare_expr()
+      if not good then return false, nil end
+      if not matchString("then") then return false, nil end
+      good, ast2 = parse_stmt_list()
+      if not good then return false, nil end
+      saveast = {IF_STMT, ast1, ast2}
+      while true do
+        if matchString("end") then return true, saveast
+        elseif matchString("elseif") then
+          good, ast1 = parse_expr()
+          if not good then return false, nil end
+          if not matchString("then") then return false, nil end
+          good, ast2 = parse_stmt_list()
+          if not good then return false, nil end
+          table.insert(saveast, ast1)
+          table.insert(saveast, ast2)
+        elseif matchString("else") then
+          good, ast1 = parse_stmt_list()
+          if not good then return false, nil end
+          if not matchString("end") then return false, nil end
+          table.insert(saveast, ast1)
+          return true, saveast
+        else 
+          return false, nil 
+        end
+      end
+    
+    elseif matchCat(lexit.ID) then
         if matchString("(") then
           if matchString (")") then
             return true, { FUNC_CALL, savelex }
           else
             return false, nil
           end
+        elseif matchString("=") then 
+          good, ast1 = parse_expr()
+          if not good then return false, nil end
+          return true, {ASSN_STMT, {SIMPLE_VAR, savelex}, ast1}
+        elseif matchString("[") then
+          good, ast1 = parse_expr()
+          if not good then return false, nil end
+          if not matchString("]") then return false, nil end
+          if not matchString("=") then return false, nil end
+          good, ast2 = parse_expr()
+          if not good then return false, nil end
+          return true, {ASSN_STMT, {ARRAY_VAR, savelex, ast1}, ast2}
+        else
+          return false, nil
         end
-        return false, nil
+    else 
+      return false, nil 
     end
 end
 
@@ -435,8 +478,14 @@ function parse_factor()
       else
         return false, nil
       end
+    elseif matchString("[") then
+      good, ast = parse_expr()
+      if not good then return false, nil end
+      if not matchString("]") then return false, nil end
+      return true, {ARRAY_VAR, savelex, ast}
+    else
+      return true, { SIMPLE_VAR, savelex }
     end
-    return true, { SIMPLE_VAR, savelex }
   elseif matchCat(lexit.NUMLIT) then
     return true, { NUMLIT_VAL, savelex }
   elseif matchString("(") then
@@ -452,6 +501,10 @@ function parse_factor()
     return true, ast
   elseif matchString("true") or matchString("false") then 
     return true, {BOOLLIT_VAL, savelex}
+  elseif matchString("+") or matchString("-") or matchString("not") then
+    good, ast = parse_factor()
+    if not good then return false, nil end
+    return true, {{UN_OP, savelex}, ast}
   else
     return false, nil
   end
