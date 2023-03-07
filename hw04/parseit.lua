@@ -1,7 +1,10 @@
 -- parseit.lua  SKELETON
 -- Glenn G. Chappell
 -- 2023-02-22
---
+
+-- Edited 2023-03-07
+-- Millard Arnold
+
 -- For CS 331 Spring 2023
 -- Solution to Assignment 4, Exercise A
 -- Requires lexit.lua
