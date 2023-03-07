@@ -356,6 +356,10 @@ function parse_statement()
         else
           return false, nil
         end
+    elseif matchString("return") then
+      good, ast1 = parse_expr()
+      if not good then return false, nil end
+      return true, {RETURN_STMT, ast1}
     else 
       return false, nil 
     end
