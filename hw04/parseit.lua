@@ -515,6 +515,15 @@ function parse_factor()
     good, ast = parse_factor()
     if not good then return false, nil end
     return true, {{UN_OP, savelex}, ast}
+  elseif matchString("read") then
+    if not (matchString("(") and matchString(")")) then return false, nil end
+    return true, {READ_CALL}
+  elseif matchString("rand") then
+    if not matchString("(") then return false, nil end
+    good, ast = parse_expr()
+    if not good then return false, nil end
+    if not matchString(")") then return false, nil end
+    return true, {RAND_CALL, ast}
   else
     return false, nil
   end
