@@ -13,7 +13,11 @@ module PA5 where
 
 -- collatzCounts
 collatzCounts :: [Integer]
-collatzCounts = [42..]  -- DUMMY; REWRITE THIS!!!
+collatzCounts = map collatzCount [1..] where
+  collatzCount k 
+    | k == 1 = 0 
+    | odd k = 1 + collatzCount ((3 * k) + 1) 
+    | otherwise = 1 + collatzCount (div k 2)
 
 
 -- =====================================================================
@@ -21,7 +25,11 @@ collatzCounts = [42..]  -- DUMMY; REWRITE THIS!!!
 
 -- findList
 findList :: Eq a => [a] -> [a] -> Maybe Int
-findList _ _ = Just 42  -- DUMMY; REWRITE THIS!!!
+findList list1 list2
+  | null indices = Nothing
+  | otherwise = Just $ head indices where
+    indices = [ x | x <- [0..((length list2) - 1)], (sublist list2 x (length list1)) == list1 ] where
+      sublist temp index size = take size $ drop index temp
 
 
 -- =====================================================================
