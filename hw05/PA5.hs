@@ -37,7 +37,9 @@ findList list1 list2
 
 -- operator ##
 (##) :: Eq a => [a] -> [a] -> Int
-_ ## _ = 42  -- DUMMY; REWRITE THIS!!!
+list1 ## list2 = length matches where
+  matches = [index | index <- [0..(minlength - 1)], (list1 !! index) == (list2 !! index)] where
+    minlength = min (length list1) (length list2)
 
 
 -- =====================================================================
