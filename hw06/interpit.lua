@@ -1,9 +1,13 @@
--- interpit.lua  SKELETON
+-- interpit.lua
+--
+-- Millard A. Arnold V
+-- 2023-04-12
+--
+-- Modified from:
 -- Glenn G. Chappell
 -- 2023-04-05
 --
 -- For CS 331 Spring 2023
--- Interpret AST from parseit.parse
 -- Solution to Assignment 6, Exercise B
 
 
@@ -208,6 +212,7 @@ function interpit.interp(ast, state, util)
                     util.output("\n")
                 elseif ast[i][1] == CHAR_CALL then
                     print("*** UNIMPLEMENTED WRITE ARG")
+                    print(astToStr(ast[1]))
                 else  -- Expression
                     local val = eval_expr(ast[i])
                     util.output(numToStr(val))
@@ -224,8 +229,22 @@ function interpit.interp(ast, state, util)
                 funcbody = { STMT_LIST }
             end
             interp_stmt_list(funcbody)
+        elseif ast[1] == ASSN_STMT then
+            if ast[2][1] == SIMPLE_VAR then
+                state.v[ast[2][2]] = eval_expr(ast[3])
+            end
+        elseif ast[1] == IF_STMT then
+            if eval_expr(ast[2]) ~= 0 then end
+        elseif ast[1] == WHILE_LOOP then
+            if eval_expr(ast[2]) == 0 then
+            else 
+                while eval_expr(ast[2]) ~= 0 do
+                    eval_expr(ast[3])
+                end
+            end
         else
             print("*** UNIMPLEMENTED STATEMENT")
+            print(astToStr(ast))
         end
     end
 
@@ -238,8 +257,15 @@ function interpit.interp(ast, state, util)
 
         if ast[1] == NUMLIT_VAL then
             result = strToNum(ast[2])
+        elseif ast[1] == BOOLLIT_VAL then
+            result = boolToInt(ast[2] == "true")
+        elseif ast[1] == SIMPLE_VAR then
+            result = state.v[ast[2][2]]
+            if result == nil then result = 0 end
+        elseif ast[1] == READ_CALL then result = strToNum(util.input())
         else
             print("*** UNIMPLEMENTED EXPRESSION")
+            print(astToStr(ast))
             result = 42  -- DUMMY VALUE
         end
 
