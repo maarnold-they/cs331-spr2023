@@ -214,8 +214,9 @@ function interpit.interp(ast, state, util)
                     print("*** UNIMPLEMENTED WRITE ARG")
                     print(astToStr(ast[1]))
                 else  -- Expression
-                    local val = eval_expr(ast[i])
-                    util.output(numToStr(val))
+                    --print(astToStr(ast))
+                    --print(numToStr(eval_expr(ast[i])))
+                    util.output(numToStr(eval_expr(ast[i])))
                 end
             end
         elseif ast[1] == FUNC_DEF then
@@ -232,6 +233,9 @@ function interpit.interp(ast, state, util)
         elseif ast[1] == ASSN_STMT then
             if ast[2][1] == SIMPLE_VAR then
                 state.v[ast[2][2]] = eval_expr(ast[3])
+            elseif ast[2][1] == ARRAY_VAR then
+                if state.a[ast[2][2]] == nil then state.a[ast[2][2]] = {} end
+                state.a[ast[2][2]][eval_expr(ast[2][3])] = eval_expr(ast[3])
             end
         elseif ast[1] == IF_STMT then
             if eval_expr(ast[2]) ~= 0 then end
@@ -259,16 +263,18 @@ function interpit.interp(ast, state, util)
             result = strToNum(ast[2])
         elseif ast[1] == BOOLLIT_VAL then
             result = boolToInt(ast[2] == "true")
+        elseif ast[1] == ARRAY_VAR then
+            if state.a[ast[2]] == nil then result = 0
+            else result = state.a[ast[2]][eval_expr(ast[3])] end
         elseif ast[1] == SIMPLE_VAR then
-            result = state.v[ast[2][2]]
-            if result == nil then result = 0 end
+            result = state.v[ast[2]]
         elseif ast[1] == READ_CALL then result = strToNum(util.input())
         else
             print("*** UNIMPLEMENTED EXPRESSION")
             print(astToStr(ast))
             result = 42  -- DUMMY VALUE
         end
-
+        if result == nil then result = 0 end
         return result
     end
 
