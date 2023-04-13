@@ -211,8 +211,9 @@ function interpit.interp(ast, state, util)
                 elseif ast[i][1] == CR_OUT then
                     util.output("\n")
                 elseif ast[i][1] == CHAR_CALL then
-                    print("*** UNIMPLEMENTED WRITE ARG")
-                    print(astToStr(ast[1]))
+                    local outChar = eval_expr(ast[i][2])
+                    if outChar < 0 or outChar > 255 then outChar = 0 end
+                    util.output(string.char(outChar))
                 else  -- Expression
                     --print(astToStr(ast))
                     --print(numToStr(eval_expr(ast[i])))
@@ -238,14 +239,18 @@ function interpit.interp(ast, state, util)
                 state.a[ast[2][2]][eval_expr(ast[2][3])] = eval_expr(ast[3])
             end
         elseif ast[1] == IF_STMT then
-            if eval_expr(ast[2]) ~= 0 then end
-        elseif ast[1] == WHILE_LOOP then
-            if eval_expr(ast[2]) == 0 then
-            else 
-                while eval_expr(ast[2]) ~= 0 do
-                    eval_expr(ast[3])
-                end
+            local continueFlag = true
+            for index = 2, #ast - 1, 2 do
+              if eval_expr(ast[index]) ~= 0 then 
+                interp_stmt_list(ast[index + 1]) 
+                continueFlag = false 
+                break 
+              end
             end
+            if continueFlag and #ast %2 == 0 then interp_stmt_list(ast[#ast]) return end
+        elseif ast[1] == WHILE_LOOP then
+            while eval_expr(ast[2]) ~= 0 do interp_stmt_list(ast[3]) end
+        elseif ast[1] == RETURN_STMT then state.v["return"] = eval_expr(ast[2])
         else
             print("*** UNIMPLEMENTED STATEMENT")
             print(astToStr(ast))
@@ -259,16 +264,44 @@ function interpit.interp(ast, state, util)
     function eval_expr(ast)
         local result
 
-        if ast[1] == NUMLIT_VAL then
-            result = strToNum(ast[2])
-        elseif ast[1] == BOOLLIT_VAL then
-            result = boolToInt(ast[2] == "true")
+        if ast[1] == NUMLIT_VAL then result = strToNum(ast[2])
+        elseif ast[1] == BOOLLIT_VAL then result = boolToInt(ast[2] == "true")
         elseif ast[1] == ARRAY_VAR then
             if state.a[ast[2]] == nil then result = 0
             else result = state.a[ast[2]][eval_expr(ast[3])] end
-        elseif ast[1] == SIMPLE_VAR then
-            result = state.v[ast[2]]
+        elseif ast[1] == SIMPLE_VAR then result = state.v[ast[2]]
         elseif ast[1] == READ_CALL then result = strToNum(util.input())
+        elseif ast[1] == FUNC_CALL then 
+            local funcname = ast[2]
+            local funcbody = state.f[funcname]
+            if funcbody == nil then
+                funcbody = { STMT_LIST }
+            end
+            interp_stmt_list(funcbody)
+            if state.v["return"] ~= nil then result = state.v["return"] end
+        elseif ast[1][1] == BIN_OP then
+            local operator = ast[1][2]
+            local lhs = eval_expr(ast[2])
+            local rhs = eval_expr(ast[3])
+            if operator == "+" then result = lhs + rhs
+            elseif operator == "-" then result = lhs - rhs
+            elseif operator == "*" then result = lhs * rhs
+            elseif operator == "/" and rhs ~= 0 then result = numToInt(lhs/rhs)
+            elseif operator == "%" and rhs ~= 0 then result = lhs % rhs
+            elseif operator == "==" then result = boolToInt(lhs == rhs)
+            elseif operator == "!=" then result = boolToInt(lhs ~= rhs)
+            elseif operator == "<=" then result = boolToInt(lhs <= rhs)
+            elseif operator == "<" then result = boolToInt(lhs < rhs)
+            elseif operator == ">=" then result = boolToInt(lhs >= rhs)
+            elseif operator == ">" then result = boolToInt(lhs > rhs)
+            elseif operator == "and" and lhs ~= 0 and rhs ~= 0 then result = 1
+            elseif operator == "or" and (lhs ~= 0 or rhs ~= 0) then result = 1
+            end
+        elseif ast[1][1] == UN_OP then
+            local operator = ast[1][2]
+            if operator == "+" then result = eval_expr(ast[2])
+            elseif operator == "-" then result = -eval_expr(ast[2])
+            elseif operator == "not" and eval_expr(ast[2]) == 0 then result = 1 end
         else
             print("*** UNIMPLEMENTED EXPRESSION")
             print(astToStr(ast))
