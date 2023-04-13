@@ -279,6 +279,7 @@ function interpit.interp(ast, state, util)
             end
             interp_stmt_list(funcbody)
             if state.v["return"] ~= nil then result = state.v["return"] end
+        elseif ast[1] == RAND_CALL then result = util.random(eval_expr(ast[2]))
         elseif ast[1][1] == BIN_OP then
             local operator = ast[1][2]
             local lhs = eval_expr(ast[2])
